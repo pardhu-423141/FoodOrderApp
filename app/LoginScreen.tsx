@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { Dimensions } from 'react-native';
+
+
 import {
   View,
   Text,
@@ -10,7 +13,7 @@ import {
   Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+const screenHeight = Dimensions.get('window').height;
 const LoginScreen = ({ onLoginSuccess }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -113,6 +116,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 60,
     paddingBottom: 30,
+    height: screenHeight * 0.2,
+    justifyContent:'center',
   },
   headerTitle: {
     fontSize: 26,
@@ -130,6 +135,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 25,
     paddingHorizontal: 25,
     paddingVertical: 30,
+    height: screenHeight * 0.8,
+    
+    justifyContent:'space-evenly',
   },
   label: {
     fontSize: 12,
