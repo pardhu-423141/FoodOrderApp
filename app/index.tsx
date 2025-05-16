@@ -3,10 +3,12 @@ import React, { useEffect, useState } from 'react';
 import SplashScreen from './SplashScreen';
 import LoginScreen from './LoginScreen';
 import DashboardScreen from './DashboardScreen'; // Import the dashboard screen
+import SignUpScreen from './SignUpScreen';
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login status
+  const [isTryingToSignUp,setShowingSignup]=useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -18,6 +20,10 @@ const App = () => {
   const handleLoginSuccess = () => {
     setIsLoggedIn(true); // Update state when login is successful
   };
+  const handleSignupSuccess=()=>{
+    setShowingSignup(true);
+  }
+
 
   if (showSplash) {
     return <SplashScreen />;
@@ -26,8 +32,12 @@ const App = () => {
   if (isLoggedIn) {
     return <DashboardScreen />;
   }
+  if(isTryingToSignUp){
+    return <SignUpScreen />;
+  }
 
-  return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+
+  return <LoginScreen onLoginSuccess={handleLoginSuccess} onSignUpSuccess={handleSignupSuccess} />;
 };
 
 export default App;

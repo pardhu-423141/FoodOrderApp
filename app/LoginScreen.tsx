@@ -1,30 +1,25 @@
-import React, { useState } from 'react';
-import { Dimensions } from 'react-native';
-
-
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  Alert,
-  TouchableOpacity,
-  Platform,
-  Image
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { Dimensions, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
 const screenHeight = Dimensions.get('window').height;
-const LoginScreen = ({ onLoginSuccess }: any) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [secureEntry, setSecureEntry] = useState(true);
+
+const LoginScreen = ({ onLoginSuccess, onSignUpSuccess }: any) => {
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   const handleLogin = () => {
-    if (email && password) {
+    const phoneRegex = /^\d{10}$/;
+    if (phoneRegex.test(phoneNumber)) {
+      setPhoneError('');
       onLoginSuccess();
     } else {
-      Alert.alert('Login Failed', 'Please enter email and password');
+      setPhoneError('Please enter a valid 10-digit phone number.');
     }
+  };
+
+  const handleSignUp = () => {
+    onSignUpSuccess();
   };
 
   return (
@@ -35,53 +30,27 @@ const LoginScreen = ({ onLoginSuccess }: any) => {
       </View>
 
       <View style={styles.form}>
-        <Text style={styles.label}>EMAIL</Text>
+        <Text style={styles.label}>PHONE NUMBER</Text>
         <TextInput
-          placeholder="example@gmail.com"
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
+          placeholder="Enter your phone number"
+          style={[styles.input, phoneError ? styles.inputErrorBorder : null]}
+          value={phoneNumber}
+          onChangeText={(text) => {
+            setPhoneNumber(text);
+            if (phoneError) setPhoneError('');
+          }}
+          keyboardType="phone-pad"
+          maxLength={10}
         />
-
-        <Text style={styles.label}>PASSWORD</Text>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            placeholder="•••••••••"
-            style={styles.passwordInput}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={secureEntry}
-          />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setSecureEntry(!secureEntry)}
-          >
-            <Ionicons
-              name={secureEntry ? 'eye-off-outline' : 'eye-outline'}
-              size={20}
-              color="#888"
-            />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.optionsRow}>
-          <View style={styles.rememberMe}>
-            <View style={styles.checkbox} />
-            <Text style={styles.rememberText}>Remember me</Text>
-          </View>
-          <TouchableOpacity>
-            <Text style={styles.forgotPassword}>Forgot Password</Text>
-          </TouchableOpacity>
-        </View>
+        {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>LOG IN</Text>
+          <Text style={styles.loginButtonText}>Send Code</Text>
         </TouchableOpacity>
 
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Don’t have an account? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleSignUp}>
             <Text style={styles.signupLink}>SIGN UP</Text>
           </TouchableOpacity>
         </View>
@@ -117,7 +86,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 30,
     height: screenHeight * 0.2,
-    justifyContent:'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 26,
@@ -136,8 +105,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     paddingVertical: 30,
     height: screenHeight * 0.8,
-    
-    justifyContent:'space-evenly',
+    justifyContent: 'space-evenly',
   },
   label: {
     fontSize: 12,
@@ -151,50 +119,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
     padding: 12,
-    marginBottom: 20,
+    color: '#808080',
   },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#eee',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    marginBottom: 20,
+  inputErrorBorder: {
+    borderColor: '#FF0000',
   },
-  passwordInput: {
-    flex: 1,
-    paddingVertical: 12,
-  },
-  eyeIcon: {
-    paddingLeft: 10,
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  rememberMe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkbox: {
-    width: 16,
-    height: 16,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    marginRight: 6,
-    borderRadius: 3,
-  },
-  rememberText: {
-    fontSize: 13,
-    color: '#333',
-  },
-  forgotPassword: {
-    color: '#FF6D00',
-    fontSize: 13,
+  errorText: {
+    color: '#FF0000',
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 10,
   },
   loginButton: {
     backgroundColor: '#FF6D00',
