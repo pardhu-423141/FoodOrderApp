@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -10,34 +11,17 @@ import {
   View,
 } from 'react-native';
 
-
-
-
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 const screenHeight = Dimensions.get('window').height;
 
 const LoginScreen = ({ onCodeSent, onSignUpClick }: any) => {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-  
-  const fadeAnim = useRef(new Animated.Value(0)).current; // Initial opacity: 0
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [backendMessage, setBackendMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -48,25 +32,33 @@ const LoginScreen = ({ onCodeSent, onSignUpClick }: any) => {
   }, [fadeAnim]);
 
   const handleLogin = () => {
-    const phoneRegex = /^\d{10}$/;
-    if (phoneRegex.test(phoneNumber)) {
-      setPhoneError('');
-      onCodeSent();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let valid = true;
+
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address.');
+      valid = false;
     } else {
-      setPhoneError('Please enter a valid 10-digit phone number.');
+      setEmailError('');
+    }
+
+    if (password.trim() === '') {
+      setPasswordError('Password cannot be empty.');
+      valid = false;
+    } else {
+      setPasswordError('');
+    }
+
+    if (valid) {
+      onCodeSent(); // Replace with real login logic
     }
   };
-  const [backendMessage, setBackendMessage] = useState('');
 
   useEffect(() => {
     fetch('https://legendary-computing-machine-wrxxgx4455v525q7g-8000.app.github.dev/api/hello/')
       .then(res => res.json())
       .then(data => {
-        if (data.message) {
-          setBackendMessage(data.message);
-        } else {
-          setBackendMessage('No message received');
-        }
+        setBackendMessage(data?.message || 'No message received');
       })
       .catch(err => {
         console.error('Backend error:', err);
@@ -84,24 +76,59 @@ const LoginScreen = ({ onCodeSent, onSignUpClick }: any) => {
       </View>
 
       <View style={styles.form}>
-        <Text style={styles.label}>PHONE NUMBER</Text>
+        <Text style={styles.label}>EMAIL ADDRESS</Text>
         <TextInput
-          placeholder="Enter your phone number"
-          style={[styles.input, phoneError ? styles.inputErrorBorder : null]}
-          value={phoneNumber}
+          placeholder="Enter your email"
+          placeholderTextColor="#808080"
+          style={[styles.input, emailError && styles.inputErrorBorder]}
+          value={email}
           onChangeText={(text) => {
-            setPhoneNumber(text);
-            if (phoneError) setPhoneError('');
+            setEmail(text);
+            if (emailError) setEmailError('');
           }}
-          keyboardType="phone-pad"
-          maxLength={10}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
-        {phoneError ? (
-          <Text style={styles.errorText}>{phoneError}</Text>
-        ) : null}
+        {emailError && <Text style={styles.errorText}>{emailError}</Text>}
 
+        <Text style={styles.label}>PASSWORD</Text>
+        <View style={styles.passwordContainer}>
+          <TextInput
+            placeholder="Enter your password"
+            placeholderTextColor="#808080"
+            style={[
+              styles.input,
+              passwordError && styles.inputErrorBorder,
+              { flex: 1 },
+            ]}
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (passwordError) setPasswordError('');
+            }}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.eyeIcon}
+          >
+            <Ionicons
+              name={showPassword ? 'eye-off' : 'eye'}
+              size={20}
+              color="#888"
+            />
+          </TouchableOpacity>
+        </View>
+        {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
+
+        {/* Forgot Password */}
+        <View>
+          <Link href="/forgotpassword" style={styles.forgotPasswordText}>forgot password</Link>
+        </View>
+        
+        
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Send Code</Text>
+          <Text style={styles.loginButtonText}>Log In</Text>
         </TouchableOpacity>
 
         <View style={styles.signupContainer}>
@@ -111,26 +138,7 @@ const LoginScreen = ({ onCodeSent, onSignUpClick }: any) => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.orText}>Or</Text>
-
-        <View style={styles.socialIcons}>
-          <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: '#3b5998' }]}>
-            <Ionicons name="logo-facebook" size={20} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: '#1DA1F2' }]}>
-            <Ionicons name="logo-twitter" size={20} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: '#000' }]}>
-            <Ionicons name="logo-apple" size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
-        <Text style={{ textAlign: 'center', color: 'green', marginTop: 20 }}>
-        {backendMessage}
-        </Text>
-
+        <Text style={styles.backendMessage}>{backendMessage}</Text>
       </View>
     </Animated.View>
   );
@@ -152,37 +160,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 26,
+    fontSize: 28,
     color: '#fff',
     fontWeight: '700',
+    fontFamily: 'System',
   },
   headerSubtitle: {
     color: '#ccc',
-    fontSize: 14,
-    marginTop: 6,
+    fontSize: 15,
+    marginTop: 8,
+    fontFamily: 'System',
   },
   form: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     paddingHorizontal: 25,
-    paddingVertical: 30,
+    paddingTop: 30,
+    paddingBottom: 20,
     height: screenHeight * 0.8,
-    justifyContent: 'space-evenly',
   },
   label: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#333',
     marginBottom: 6,
     fontWeight: '600',
+    fontFamily: 'System',
+    marginTop: 20,
   },
   input: {
     borderWidth: 1,
     borderColor: '#eee',
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
-    padding: 12,
-    color: '#808080',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    fontFamily: 'System',
+    color: '#333',
   },
   inputErrorBorder: {
     borderColor: '#FF0000',
@@ -190,51 +205,62 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#FF0000',
     fontSize: 12,
-    marginTop: 4,
-    marginBottom: 10,
+    marginTop: 6,
+  },
+  forgotPasswordText: {
+    color: '#FF6D00',
+    fontSize: 13,
+    marginTop: 10,
+    textAlign: 'left',
+    fontWeight: '500',
   },
   loginButton: {
     backgroundColor: '#FF6D00',
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
-    marginBottom: 20,
+    marginTop: 20,
   },
   loginButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 15,
+    fontSize: 16,
+    fontFamily: 'System',
   },
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginTop: 25,
   },
   signupText: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#555',
+    fontFamily: 'System',
   },
   signupLink: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#FF6D00',
     fontWeight: 'bold',
+    fontFamily: 'System',
   },
-  orText: {
+  backendMessage: {
     textAlign: 'center',
-    color: '#888',
+    color: 'green',
     fontSize: 13,
-    marginBottom: 10,
+    marginTop: 30,
+    fontFamily: 'System',
   },
-  socialIcons: {
+  passwordContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-  },
-  socialButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#eee',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginTop: 8,
+  },
+  eyeIcon: {
+    paddingHorizontal: 8,
   },
 });

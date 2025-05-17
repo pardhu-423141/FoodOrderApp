@@ -1,14 +1,14 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  View,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 
 interface Props {
   onSignUpComplete: () => void;
@@ -16,7 +16,7 @@ interface Props {
 
 const SignUpScreen: React.FC<Props> = ({ onSignUpComplete }) => {
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [retypePassword, setRetypePassword] = useState("");
 
@@ -28,7 +28,7 @@ const SignUpScreen: React.FC<Props> = ({ onSignUpComplete }) => {
 
   const [errors, setErrors] = useState({
     name: "",
-    phone: "",
+    email: "",
     password: "",
     retypePassword: "",
   });
@@ -36,7 +36,7 @@ const SignUpScreen: React.FC<Props> = ({ onSignUpComplete }) => {
   const handleSignUp = () => {
     const newErrors = {
       name: "",
-      phone: "",
+      email: "",
       password: "",
       retypePassword: "",
     };
@@ -47,9 +47,9 @@ const SignUpScreen: React.FC<Props> = ({ onSignUpComplete }) => {
       isValid = false;
     }
 
-    const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(phone)) {
-      newErrors.phone = "Phone number must be 10 digits.";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      newErrors.email = "Please enter a valid email address.";
       isValid = false;
     }
 
@@ -90,20 +90,20 @@ const SignUpScreen: React.FC<Props> = ({ onSignUpComplete }) => {
           />
           {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
 
-          <Text style={styles.label}>PHONE NUMBER</Text>
+          <Text style={styles.label}>EMAIL</Text>
           <TextInput
-            placeholder="Enter 10 digit phone number"
+            placeholder="example@email.com"
             placeholderTextColor="#999"
             style={styles.input}
-            value={phone}
+            value={email}
             onChangeText={(text) => {
-              setPhone(text);
-              setErrors((prev) => ({ ...prev, phone: "" }));
+              setEmail(text);
+              setErrors((prev) => ({ ...prev, email: "" }));
             }}
-            keyboardType="phone-pad"
-            maxLength={10}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
-          {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
+          {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
 
           <Text style={styles.label}>PASSWORD</Text>
           <View style={styles.passwordWrapper}>

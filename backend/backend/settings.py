@@ -75,13 +75,26 @@ WSGI_APPLICATION = "backend.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+import dj_database_url
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',  # Your database name
+        'USER': 'postgres.ugqnqwtxlqerodtjduup',  # Your database user
+        'PASSWORD': 'mfeg#SHNdD3VRF*',  # Your database password
+        'HOST': 'aws-0-ap-south-1.pooler.supabase.com',  # Your Supabase pooler host
+        'PORT': '6543',  # Supabase pooler port for transaction pooling
+        'CONN_MAX_AGE': 0,  # IMPORTANT for Transaction Pooling
+        'OPTIONS': {
+            'sslmode': 'require',  # Enforce SSL connection
+        }
     }
 }
+
+
+
+
 
 
 # Password validation

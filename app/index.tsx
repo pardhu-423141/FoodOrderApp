@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import DashboardScreen from './DashboardScreen';
 import LoginScreen from './LoginScreen';
+import SetPassword from './SetPassword';
 import SignUpScreen from './SignUpScreen';
 import SplashScreen from './SplashScreen';
 import VerifyPage from './Verify';
@@ -12,20 +13,20 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isSet, setIsSetting] = useState(false);
+  const [isPasswordSet, setPasswordSet] = useState(false);
 
   const splashOpacity = useRef(new Animated.Value(1)).current;
   const loginOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Fade out splash first
       Animated.timing(splashOpacity, {
         toValue: 0,
         duration: 300,
         useNativeDriver: true,
       }).start(() => {
         setShowSplash(false);
-        // Fade in login immediately after splash disappears
         Animated.timing(loginOpacity, {
           toValue: 1,
           duration: 300,
@@ -46,18 +47,16 @@ const App = () => {
   }
 
   if (isLoggedIn) return <DashboardScreen />;
-
-  if (isVerifying)
-    return <VerifyPage onVerifySuccess={() => setIsLoggedIn(true)} />;
-
-  if (isSigningUp)
-    return <SignUpScreen onSignUpComplete={() => setIsVerifying(true)} />;
-
+  if (isSet) return <SetPassword onPasswordSet={() => setPasswordSet(true)} />;
+  if (isVerifying) return <VerifyPage onVerifySuccess={() => setIsSetting(true)} />;
+  if (isSigningUp) return <SignUpScreen onSignUpComplete={() => setIsVerifying(true)} />;
+  if (isPasswordSet) return <LoginScreen />;
   return (
     <Animated.View style={[styles.container, { opacity: loginOpacity }]}>
       <LoginScreen
-        onCodeSent={() => setIsVerifying(true)}
+        onCodeSent={() => setIsLoggedIn(true)}
         onSignUpClick={() => setIsSigningUp(true)}
+        onSet={() => setIsSetting(true)}
       />
     </Animated.View>
   );

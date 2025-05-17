@@ -1,17 +1,28 @@
-import React from 'react';
+// VerifyPage.tsx
+import { useRouter } from "expo-router";
+import React from "react";
 import {
   Dimensions,
+  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
+interface Props{
+  onVerifySuccess: ()=> void;
+}
+const screenHeight = Dimensions.get("window").height;
 
-const screenHeight = Dimensions.get('window').height;
+const VerifyPage: React.FC<Props> = (onVerifySuccess) => {
+  const router = useRouter();
 
-export default function VerifyPage({ onVerifySuccess }: any) {
+  const handleVerify = () => {
+    router.push("/SetPassword"); // Navigate to the set password screen
+  };
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>Verification</Text>
         <Text style={styles.headerSubtitle}>
@@ -27,13 +38,15 @@ export default function VerifyPage({ onVerifySuccess }: any) {
 
         <Text style={styles.resendText}>Resend in 50 sec</Text>
 
-        <TouchableOpacity style={styles.verifyButton} onPress={onVerifySuccess}>
+        <TouchableOpacity style={styles.verifyButton} onPress={handleVerify}>
           <Text style={styles.verifyButtonText}>VERIFY</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
-}
+};
+
+export default VerifyPage;
 
 const styles = StyleSheet.create({
   container: {
