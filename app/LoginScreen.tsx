@@ -1,32 +1,86 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
+
+
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 const screenHeight = Dimensions.get('window').height;
 
-const LoginScreen = ({ onLoginSuccess, onSignUpSuccess }: any) => {
+const LoginScreen = ({ onCodeSent, onSignUpClick }: any) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current; // Initial opacity: 0
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 700,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
 
   const handleLogin = () => {
     const phoneRegex = /^\d{10}$/;
     if (phoneRegex.test(phoneNumber)) {
       setPhoneError('');
-      onLoginSuccess();
+      onCodeSent();
     } else {
       setPhoneError('Please enter a valid 10-digit phone number.');
     }
   };
+  const [backendMessage, setBackendMessage] = useState('');
 
-  const handleSignUp = () => {
-    onSignUpSuccess();
-  };
+  useEffect(() => {
+    fetch('https://legendary-computing-machine-wrxxgx4455v525q7g-8000.app.github.dev/api/hello/')
+      .then(res => res.json())
+      .then(data => {
+        if (data.message) {
+          setBackendMessage(data.message);
+        } else {
+          setBackendMessage('No message received');
+        }
+      })
+      .catch(err => {
+        console.error('Backend error:', err);
+        setBackendMessage('Failed to connect to backend');
+      });
+  }, []);
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Log In</Text>
-        <Text style={styles.headerSubtitle}>Please sign in to your existing account</Text>
+        <Text style={styles.headerSubtitle}>
+          Please sign in to your existing account
+        </Text>
       </View>
 
       <View style={styles.form}>
@@ -42,7 +96,9 @@ const LoginScreen = ({ onLoginSuccess, onSignUpSuccess }: any) => {
           keyboardType="phone-pad"
           maxLength={10}
         />
-        {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
+        {phoneError ? (
+          <Text style={styles.errorText}>{phoneError}</Text>
+        ) : null}
 
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
           <Text style={styles.loginButtonText}>Send Code</Text>
@@ -50,7 +106,7 @@ const LoginScreen = ({ onLoginSuccess, onSignUpSuccess }: any) => {
 
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Don’t have an account? </Text>
-          <TouchableOpacity onPress={handleSignUp}>
+          <TouchableOpacity onPress={onSignUpClick}>
             <Text style={styles.signupLink}>SIGN UP</Text>
           </TouchableOpacity>
         </View>
@@ -58,18 +114,25 @@ const LoginScreen = ({ onLoginSuccess, onSignUpSuccess }: any) => {
         <Text style={styles.orText}>Or</Text>
 
         <View style={styles.socialIcons}>
-          <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#3b5998' }]}>
+          <TouchableOpacity
+            style={[styles.socialButton, { backgroundColor: '#3b5998' }]}>
             <Ionicons name="logo-facebook" size={20} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#1DA1F2' }]}>
+          <TouchableOpacity
+            style={[styles.socialButton, { backgroundColor: '#1DA1F2' }]}>
             <Ionicons name="logo-twitter" size={20} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#000' }]}>
-            <Ionicons name={Platform.OS === 'ios' ? 'logo-apple' : 'logo-apple'} size={20} color="#fff" />
+          <TouchableOpacity
+            style={[styles.socialButton, { backgroundColor: '#000' }]}>
+            <Ionicons name="logo-apple" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
+        <Text style={{ textAlign: 'center', color: 'green', marginTop: 20 }}>
+        {backendMessage}
+        </Text>
+
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

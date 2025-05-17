@@ -1,14 +1,22 @@
 import React from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 const screenHeight = Dimensions.get('window').height;
 
-export default function VerifyPage() {
+export default function VerifyPage({ onVerifySuccess }: any) {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>Verification</Text>
-        <Text style={styles.headerSubtitle}>We have sent a code to your email</Text>
+        <Text style={styles.headerSubtitle}>
+          We have sent a code to your email
+        </Text>
         <Text style={styles.emailText}>example@gmail.com</Text>
       </View>
 
@@ -19,9 +27,9 @@ export default function VerifyPage() {
 
         <Text style={styles.resendText}>Resend in 50 sec</Text>
 
-        <View style={styles.verifyButton}>
+        <TouchableOpacity style={styles.verifyButton} onPress={onVerifySuccess}>
           <Text style={styles.verifyButtonText}>VERIFY</Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -30,7 +38,7 @@ export default function VerifyPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8', // light semi white
+    backgroundColor: '#f8f8f8',
   },
   headerContainer: {
     height: screenHeight * 0.3,
