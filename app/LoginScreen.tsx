@@ -76,6 +76,9 @@ export default function LoginScreen() {
         } else if(userEmail === 'messfoodnitap@gmail.com'){
           console.log('Admin login successful');
           router.replace('/adminDashboard');
+        } else if (userEmail=== 'employeenitapmess@gmail.com' ){
+          console.log('Employee login successful');
+          router.replace('/employeeDashboard');
         }
         else {
           console.log('Login successful');
