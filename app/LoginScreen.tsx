@@ -63,15 +63,21 @@ export default function LoginScreen() {
       }
 
       const signIn = async () => {
-        const { error } = await supabase.auth.signInWithIdToken({
+        const { data,error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: idToken,
         });
 
+        const userEmail = data.user?.email;
+
         if (error) {
           console.error('Supabase sign-in error:', error.message);
           Alert.alert('Login failed', error.message);
-        } else {
+        } else if(userEmail === 'messfoodnitap@gmail.com'){
+          console.log('Admin login successful');
+          router.replace('/adminDashboard');
+        }
+        else {
           console.log('Login successful');
           router.replace('/DashboardScreen');
         }
