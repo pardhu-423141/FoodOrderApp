@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import SupabaseAuthView, hello_world
+from .views import SupabaseAuthView,AddFoodItemView
 
 urlpatterns = [
-    path('hello/', hello_world),
+    
     path('api/auth/supabase/', SupabaseAuthView.as_view(), name='supabase-auth'),
+    path('food/add/', AddFoodItemView.as_view(), name='add-food'),
 ]

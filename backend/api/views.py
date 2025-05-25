@@ -1,13 +1,10 @@
 from django.shortcuts import render
 
-# Create your views here.
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from supabase import create_client
 
-@api_view(['GET'])
-def hello_world(request):
-    return Response({"message": "Hello from Django backend!"})
+
+
+
+
 
 
 from rest_framework.views import APIView
@@ -64,3 +61,40 @@ class SupabaseAuthView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+
+
+
+
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+import uuid
+from datetime import datetime, timezone
+from django.db import connection
+
+class AddFoodItemView(APIView):
+    def post(self, request):
+        data = request.data
+        name = data.get("name")
+        description = data.get("description", "")
+        image_url = data.get("image_url", "")
+
+        if not name:
+            return Response({"error": "Name is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        id = str(uuid.uuid4())
+        created_at = datetime.now(timezone.utc)
+
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO food_items (id, name, description, image_url, created_at)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (id, name, description, image_url, created_at))
+
+            return Response({"message": "Food item added"}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
