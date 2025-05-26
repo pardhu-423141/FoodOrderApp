@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { View, TextInput, Button, Text, Alert, Image, ActivityIndicator } from 'react-native';
+import { View, TextInput, Button, Text, Alert, Image, ActivityIndicator, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '../lib/supabase'; // your supabase client
+import { supabase } from '../lib/supabase';
 import axios from 'axios';
 
 export default function FoodDetailsScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // for web
   const [uploading, setUploading] = useState(false);
 
-  // Pick image from library
+  // Mobile image picker
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -19,7 +20,7 @@ export default function FoodDetailsScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
     });
 
@@ -28,49 +29,63 @@ export default function FoodDetailsScreen() {
     }
   };
 
-  // Upload image to Supabase Storage and return public URL
-  const uploadImageAsync = async (uri: string) => {
-  try {
-    setUploading(true);
+  // Web file input handler
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
 
-    // Convert to blob
-    const response = await fetch(uri);
-    const blob = await response.blob();
-
-    // Safely extract file extension from MIME type
-    const mimeType = blob.type; // e.g., "image/jpeg"
-    const ext = mimeType.split('/')[1] || 'jpg'; // fallback to 'jpg'
-
-    // Create a clean filename
-    const fileName = `${Date.now()}.${ext}`;
-
-    // Upload to Supabase
-    const { data, error } = await supabase.storage
-      .from('food-images')
-      .upload(fileName, blob, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: mimeType,
-      });
-
-    if (error) {
-      throw error;
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUri(reader.result as string); // for preview
+      };
+      reader.readAsDataURL(file);
     }
+  };
 
-    // Get public URL
-    const { data: publicUrlData } = supabase.storage
-      .from('food-images')
-      .getPublicUrl(fileName);
+  // Upload image to Supabase
+  const uploadImageAsync = async (): Promise<string | null> => {
+    try {
+      setUploading(true);
+      let file: Blob;
+      let mimeType: string;
 
-    setUploading(false);
-    return publicUrlData.publicUrl;
-  } catch (error) {
-    setUploading(false);
-    Alert.alert('Upload failed', (error as Error).message);
-    return null;
-  }
-};
+      if (Platform.OS === 'web') {
+        if (!selectedFile) throw new Error('No file selected on web.');
+        file = selectedFile;
+        mimeType = selectedFile.type;
+      } else {
+        if (!imageUri) throw new Error('No image selected on mobile.');
+        const response = await fetch(imageUri);
+        file = await response.blob();
+        mimeType = file.type;
+      }
 
+      const ext = mimeType.split('/')[1] || 'jpg';
+      const fileName = `${Date.now()}.${ext}`;
+
+      const { data, error } = await supabase.storage
+        .from('food-images')
+        .upload(fileName, file, {
+          contentType: mimeType,
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('food-images')
+        .getPublicUrl(fileName);
+
+      setUploading(false);
+      return publicUrlData.publicUrl;
+    } catch (error) {
+      setUploading(false);
+      console.error('Upload failed:', error);
+      Alert.alert('Upload failed', (error as Error).message);
+      return null;
+    }
+  };
 
   const handleSubmit = async () => {
     if (!name) {
@@ -80,14 +95,14 @@ export default function FoodDetailsScreen() {
 
     let image_url = '';
 
-    if (imageUri) {
-      const uploadedUrl = await uploadImageAsync(imageUri);
+    if ((Platform.OS === 'web' && selectedFile) || (Platform.OS !== 'web' && imageUri)) {
+      const uploadedUrl = await uploadImageAsync();
       if (!uploadedUrl) return; // stop if upload failed
       image_url = uploadedUrl;
     }
 
     try {
-      const response = await axios.post('https://legendary-computing-machine-wrxxgx4455v525q7g-8000.app.github.dev/api/food/add/', {
+      const response = await axios.post('http://127.0.0.1:8000/api/food/add/', {
         name,
         description,
         image_url,
@@ -98,6 +113,7 @@ export default function FoodDetailsScreen() {
         setName('');
         setDescription('');
         setImageUri(null);
+        setSelectedFile(null);
       }
     } catch (error: any) {
       console.error(error);
@@ -124,9 +140,19 @@ export default function FoodDetailsScreen() {
         style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
       />
 
-      <Button title="Pick Image (optional)" onPress={pickImage} />
+      {Platform.OS === 'web' ? (
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+        />
+      ) : (
+        <Button title="Pick Image (optional)" onPress={pickImage} />
+      )}
 
-      {uploading && <ActivityIndicator size="large" color="#0000ff" style={{ marginVertical: 10 }} />}
+      {uploading && (
+        <ActivityIndicator size="large" color="#0000ff" style={{ marginVertical: 10 }} />
+      )}
 
       {imageUri && (
         <Image
