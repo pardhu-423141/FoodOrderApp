@@ -1,15 +1,25 @@
-import { useState } from 'react';
-import { View, TextInput, Button, Text, Alert, Image, ActivityIndicator, Platform } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '../lib/supabase';
 import axios from 'axios';
+import * as ImagePicker from 'expo-image-picker';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Button,
+  Image,
+  Platform,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { supabase } from '../lib/supabase'; // your supabase client
 
 export default function FoodDetailsScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // for web
+  const [selectedFile, setSelectedFile] = useState<any>(null); // for web
   const [uploading, setUploading] = useState(false);
+  const [price, setPrice] = useState('');
 
   // Mobile image picker
   const pickImage = async () => {
@@ -44,7 +54,7 @@ export default function FoodDetailsScreen() {
   };
 
   // Upload image to Supabase
-  const uploadImageAsync = async (): Promise<string | null> => {
+  const uploadImageAsync = async (uri: string): Promise<string | null> => {
     try {
       setUploading(true);
       let file: Blob;
@@ -55,8 +65,8 @@ export default function FoodDetailsScreen() {
         file = selectedFile;
         mimeType = selectedFile.type;
       } else {
-        if (!imageUri) throw new Error('No image selected on mobile.');
-        const response = await fetch(imageUri);
+        if (!uri) throw new Error('No image selected on mobile.');
+        const response = await fetch(uri);
         file = await response.blob();
         mimeType = file.type;
       }
@@ -93,11 +103,16 @@ export default function FoodDetailsScreen() {
       return;
     }
 
+    if (!price || isNaN(Number(price))) {
+      Alert.alert('Invalid price', 'Please enter a valid number for the price.');
+      return;
+    }
+
     let image_url = '';
 
     if ((Platform.OS === 'web' && selectedFile) || (Platform.OS !== 'web' && imageUri)) {
-      const uploadedUrl = await uploadImageAsync();
-      if (!uploadedUrl) return; // stop if upload failed
+      const uploadedUrl = await uploadImageAsync(imageUri!);
+      if (!uploadedUrl) return;
       image_url = uploadedUrl;
     }
 
@@ -106,12 +121,14 @@ export default function FoodDetailsScreen() {
         name,
         description,
         image_url,
+        price,
       });
 
       if (response.status === 201) {
         Alert.alert('Food item added!');
         setName('');
         setDescription('');
+        setPrice('');
         setImageUri(null);
         setSelectedFile(null);
       }
@@ -132,6 +149,18 @@ export default function FoodDetailsScreen() {
         style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
       />
       <TextInput
+        placeholder="Price"
+        value={price}
+        keyboardType="numeric"
+        onChangeText={(text) => {
+          const numericRegex = /^[0-9]*\.?[0-9]*$/;
+          if (numericRegex.test(text)) {
+            setPrice(text);
+          }
+        }}
+        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
+      />
+      <TextInput
         placeholder="Description"
         value={description}
         onChangeText={setDescription}
@@ -141,11 +170,10 @@ export default function FoodDetailsScreen() {
       />
 
       {Platform.OS === 'web' ? (
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-        />
+        <View style={{ marginBottom: 10 }}>
+          <Text>Select an image:</Text>
+          <input type="file" accept="image/*" onChange={handleFileChange} />
+        </View>
       ) : (
         <Button title="Pick Image (optional)" onPress={pickImage} />
       )}
@@ -166,3 +194,4 @@ export default function FoodDetailsScreen() {
     </View>
   );
 }
+
