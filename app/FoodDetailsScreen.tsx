@@ -1,14 +1,15 @@
-import { useState } from 'react';
-import { View, TextInput, Button, Text, Alert, Image, ActivityIndicator } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '../lib/supabase'; // your supabase client
 import axios from 'axios';
+import * as ImagePicker from 'expo-image-picker';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, Button, Image, Text, TextInput, View } from 'react-native';
+import { supabase } from '../lib/supabase'; // your supabase client
 
 export default function FoodDetailsScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [price, setPrice] = useState('');
 
   // Pick image from library
   const pickImage = async () => {
@@ -79,7 +80,10 @@ export default function FoodDetailsScreen() {
     }
 
     let image_url = '';
-
+    if (!price || isNaN(Number(price))) {
+      Alert.alert('Invalid price', 'Please enter a valid number for the price.');
+      return;
+    }
     if (imageUri) {
       const uploadedUrl = await uploadImageAsync(imageUri);
       if (!uploadedUrl) return; // stop if upload failed
@@ -87,16 +91,19 @@ export default function FoodDetailsScreen() {
     }
 
     try {
-      const response = await axios.post('https://legendary-computing-machine-wrxxgx4455v525q7g-8000.app.github.dev/api/food/add/', {
+      const response = await axios.post('http://127.0.0.1:8000/api/food/add/', {
+      //const response = await axios.post('http://127.0.0.1:8000/', {
         name,
         description,
         image_url,
+        price,
       });
 
       if (response.status === 201) {
         Alert.alert('Food item added!');
         setName('');
         setDescription('');
+        setPrice('');
         setImageUri(null);
       }
     } catch (error: any) {
@@ -115,6 +122,20 @@ export default function FoodDetailsScreen() {
         onChangeText={setName}
         style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
       />
+      <TextInput
+        placeholder="Price"
+        value={price}
+        keyboardType="numeric"
+        onChangeText={(text) => {
+          // Allow only numbers and optional decimal
+          const numericRegex = /^[0-9]*\.?[0-9]*$/;
+          if (numericRegex.test(text)) {
+            setPrice(text);
+          }
+        }}
+        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
+      />
+
       <TextInput
         placeholder="Description"
         value={description}

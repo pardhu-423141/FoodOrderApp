@@ -81,7 +81,7 @@ class AddFoodItemView(APIView):
         name = data.get("name")
         description = data.get("description", "")
         image_url = data.get("image_url", "")
-
+        price = data.get("price","")
         if not name:
             return Response({"error": "Name is required"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -91,10 +91,43 @@ class AddFoodItemView(APIView):
         try:
             with connection.cursor() as cursor:
                 cursor.execute("""
-                    INSERT INTO food_items (id, name, description, image_url, created_at)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, (id, name, description, image_url, created_at))
+                    INSERT INTO food_items (id, name, description, image_url, created_at, price)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (id, name, description, image_url, created_at,price))
 
             return Response({"message": "Food item added"}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.db import connection
+
+class ViewFoodItemsView(APIView):
+    def get(self, request):
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT name, description, image_url, price FROM food_items")
+                rows = cursor.fetchall()
+
+                # Map each row to a dictionary
+                food_items = []
+                for row in rows:
+                    food_items.append({
+
+                        "name": row[0],
+                        "description": row[1],
+                        "image_url": row[2],
+                        "price": row[3]
+                    })
+
+            return Response(food_items, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
