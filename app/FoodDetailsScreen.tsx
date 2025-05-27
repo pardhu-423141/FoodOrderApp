@@ -17,7 +17,7 @@ export default function FoodDetailsScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<any>(null); // for web
+  const [selectedFile, setSelectedFile] = useState<any>(null); 
   const [uploading, setUploading] = useState(false);
   const [price, setPrice] = useState('');
 
@@ -30,7 +30,7 @@ export default function FoodDetailsScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes:'images',
       quality: 0.7,
     });
 
