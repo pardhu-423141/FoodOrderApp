@@ -10,7 +10,7 @@ const ForgotPasswordScreen = () => {
 
   const handleSendCode = () => {
     if (email) {
-      router.push('/verify');
+      router.push('/Verify');
     } else {
       Alert.alert('Error', 'Please enter your email');
     }

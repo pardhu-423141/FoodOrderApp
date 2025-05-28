@@ -114,20 +114,62 @@ class ViewFoodItemsView(APIView):
     def get(self, request):
         try:
             with connection.cursor() as cursor:
-                cursor.execute("SELECT name, description, image_url, price FROM food_items")
+                cursor.execute("SELECT id, name, description, image_url, price, rating FROM food_items")
                 rows = cursor.fetchall()
 
                 # Map each row to a dictionary
                 food_items = []
                 for row in rows:
                     food_items.append({
+                        "id": row[0],
+                        "name": row[1],
+                        "description": row[2],
+                        "image_url": row[3],
+                        "price": row[4],
+                        "rating": row[5],
 
-                        "name": row[0],
-                        "description": row[1],
-                        "image_url": row[2],
-                        "price": row[3]
                     })
 
             return Response(food_items, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.db import connection
+
+class GetItemsByIdsView(APIView):
+    def post(self, request):
+        try:
+            ids = request.data.get('ids', [])
+            if not ids:
+                return Response([], status=200)
+
+            with connection.cursor() as cursor:
+                sql = """
+                    SELECT id, name, description, image_url, price, rating
+                    FROM food_items
+                    WHERE id IN %s
+                """
+                cursor.execute(sql, (tuple(ids),)) 
+
+                rows = cursor.fetchall()
+
+                food_items = []
+                for row in rows:
+                    food_items.append({
+                        "id": row[0],
+                        "name": row[1],
+                        "description": row[2],
+                        "image_url": row[3],
+                        "price": row[4],
+                        "rating": row[5],
+                    })
+
+            return Response(food_items, status=status.HTTP_200_OK)
+        except Exception as e:
+                import traceback
+                traceback.print_exc()
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
