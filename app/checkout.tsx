@@ -1,6 +1,13 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 type CartItem = {
   id: string;
@@ -18,9 +25,11 @@ type FoodItem = {
 
 export default function CheckoutScreen() {
   const { cart } = useLocalSearchParams();
+  const router = useRouter();
+
   const [items, setItems] = useState<FoodItem[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true); // ⬅️ Loading state
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (cart && typeof cart === 'string') {
@@ -60,6 +69,21 @@ export default function CheckoutScreen() {
     return cartItems.find(item => item.id === id)?.quantity ?? 0;
   };
 
+  const getTotalAmount = () => {
+    return items.reduce((total, item) => {
+      const qty = getQuantity(item.id);
+      return total + item.price * qty;
+    }, 0);
+  };
+
+  const handlePay = () => {
+    const total = getTotalAmount();
+    router.push({
+      pathname: '/paymentPage',
+      params: { amount: total.toString() },
+    });
+  };
+  console.log(handlePay);
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Checkout</Text>
@@ -67,17 +91,22 @@ export default function CheckoutScreen() {
       {loading ? (
         <ActivityIndicator size="large" color="#009688" />
       ) : (
-        <FlatList
-          data={items}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.itemContainer}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text>Qty: {getQuantity(item.id)}</Text>
-              <Text>Price: ₹ {item.price * getQuantity(item.id)}</Text>
-            </View>
-          )}
-        />
+        <>
+          <FlatList
+            data={items}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.itemContainer}>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text>Qty: {getQuantity(item.id)}</Text>
+                <Text>Price: ₹ {item.price * getQuantity(item.id)}</Text>
+              </View>
+            )}
+          />
+          <TouchableOpacity style={styles.payButton} onPress={handlePay}>
+            <Text style={styles.payButtonText}>Pay ₹{getTotalAmount()}</Text>
+          </TouchableOpacity>
+        </>
       )}
     </View>
   );
@@ -88,4 +117,16 @@ const styles = StyleSheet.create({
   heading: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
   itemContainer: { marginBottom: 12 },
   name: { fontWeight: 'bold' },
+  payButton: {
+    backgroundColor: '#009688',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  payButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });
